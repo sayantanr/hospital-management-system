@@ -2,7 +2,7 @@
     "smtp_server": "smtp.gmail.com",
     "smtp_port": 587,
     "smtp_email": "sayantanr100@gmail.com",
-    "smtp_password": "Sanu@123",
+    "smtp_password": "Sanu@@@124593",
     "patient_subject": "Appointment Confirmation",
     "patient_body": "Hello [PatientName],\r\n\r\nYour appointment with [DoctorName] is confirmed for [Date] at [Time].\r\n\r\nThank you.",
     "doctor_subject": "New Appointment Scheduled",
