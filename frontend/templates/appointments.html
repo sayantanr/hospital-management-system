@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Appointments | HMS{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Appointment Scheduling</h1>
+    <p>Book and manage patient appointments</p>
+</div>
+
+<div class="grid-2">
+    <!-- Book Appointment Form -->
+    <div class="glass-card">
+        <h2 style="margin-bottom: 1.5rem;">Book Appointment</h2>
+        {% if not patients or not doctors %}
+            <div class="alert warning">
+                Please ensure you have at least one patient and one doctor registered before booking an appointment.
+            </div>
+        {% else %}
+        <form method="POST" action="{{ url_for('appointments') }}">
+            <div class="form-group">
+                <label>Select Patient</label>
+                <select name="patientId" class="form-control" required>
+                    <option value="" disabled selected>-- Select Patient --</option>
+                    {% for p in patients %}
+                    <option value="{{ p.id }}">{{ p.firstName }} {{ p.lastName }} (ID: {{ p.id }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Select Doctor</label>
+                <select name="doctorId" class="form-control" required>
+                    <option value="" disabled selected>-- Select Doctor --</option>
+                    {% for d in doctors %}
+                    <option value="{{ d.id }}">Dr. {{ d.firstName }} {{ d.lastName }} - {{ d.specialization }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="grid-2" style="gap: 1rem; margin-bottom: 0;">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" name="appointmentDate" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Time</label>
+                    <input type="time" name="appointmentTime" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Status</label>
+                <select name="status" class="form-control">
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Appointment Details (Will be Emailed)</label>
+                <textarea name="notes" class="form-control" rows="4" placeholder="Type the appointment details here. This exact text will be sent to both the patient and the doctor automatically."></textarea>
+            </div>
+
+            <button type="submit" class="btn"><i class="fa-solid fa-calendar-plus"></i> Book Appointment</button>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- Appointments List -->
+    <div class="glass-card" style="height: fit-content;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">Scheduled Appointments</h2>
+            <input type="text" id="appointmentSearch" onkeyup="filterTable('appointmentSearch', 'appointmentsTable')" class="form-control" style="width: 250px; margin: 0; padding: 0.5rem 1rem;" placeholder="Search appointments...">
+        </div>
+        {% if appointments %}
+        <div class="table-container">
+            <table id="appointmentsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date & Time</th>
+                        <th>Details</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appt in appointments %}
+                    <tr>
+                        <td>#{{ appt.id }}</td>
+                        <td>{{ appt.appointmentDate.replace('T', ' ') if appt.appointmentDate else 'N/A' }}</td>
+                        <td>
+                            <strong>Patient:</strong> {{ appt.patient.firstName }} {{ appt.patient.lastName }}<br>
+                            <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                                <strong>Dr.</strong> {{ appt.doctor.firstName }} {{ appt.doctor.lastName }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge {% if appt.status == 'Scheduled' %}primary{% elif appt.status == 'Completed' %}success{% else %}warning{% endif %}">
+                                {{ appt.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--card-bg); border: 1px solid var(--border-color);" onclick='openModal("Appointment #{{ appt.id }} Details", {
+                                    "Date & Time": "{{ appt.appointmentDate.replace("T", " ") if appt.appointmentDate else "N/A" }}",
+                                    "Status": "{{ appt.status }}",
+                                    "Patient": "{{ appt.patient.firstName }} {{ appt.patient.lastName }}",
+                                    "Doctor": "Dr. {{ appt.doctor.firstName }} {{ appt.doctor.lastName }}",
+                                    "Notes": {{ appt.notes | tojson if appt.notes else '"N/A"' }}
+                                })'><i class="fa-solid fa-eye"></i> View</button>
+                                <form method="POST" action="{{ url_for('resend_email', appt_id=appt.id) }}" style="margin: 0;">
+                                    <button type="submit" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--accent-color); color: white;"><i class="fa-solid fa-envelope"></i> Send Mail</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color: var(--text-secondary);">No appointments scheduled yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="glass-card" style="margin-top: 2rem; border-top: 3px solid var(--accent-color);">
+    <h2 style="margin-bottom: 1.5rem;"><i class="fa-brands fa-google"></i> Gmail Automation Settings</h2>
+    <p style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+        Configure your Gmail account here to enable automatic email notifications.
+    </p>
+    <form method="POST" action="{{ url_for('update_gmail_settings') }}">
+        <div class="grid-2" style="gap: 1rem; margin-bottom: 1rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Gmail Address</label>
+                <input type="email" name="smtp_email" class="form-control" value="{{ settings.smtp_email }}" placeholder="hospital-admin@gmail.com" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.5rem;">
+                <label>App Password</label>
+                <input type="password" id="smtp_password" name="smtp_password" class="form-control" value="{{ settings.smtp_password }}" placeholder="••••••••••••••••" required>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-secondary);">
+                <input type="checkbox" onclick="togglePass()"> Show Password
+            </div>
+        </div>
+        <div class="alert warning" style="font-size: 0.8rem; margin-bottom: 1.5rem;">
+            <i class="fa-solid fa-triangle-exclamation"></i> <strong>CRITICAL:</strong> You MUST use a 16-character <strong>Google App Password</strong>. Your regular Gmail password will fail. 
+            <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color: var(--accent-color);">Generate one here</a>.
+        </div>
+        <button type="submit" class="btn" style="width: auto;"><i class="fa-solid fa-save"></i> Save & Clean Settings</button>
+    </form>
+</div>
+
+<script>
+    function togglePass() {
+        var x = document.getElementById("smtp_password");
+        if (x.type === "password") {
+            x.type = "text";
+        } else {
+            x.type = "password";
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | HMS{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Dashboard</h1>
+    <p>Overview of the Hospital Management System</p>
+</div>
+
+<div class="grid-3">
+    <div class="glass-card">
+        <h3><i class="fa-solid fa-users text-blue"></i> Total Patients</h3>
+        <h1 style="font-size: 3rem; margin-top: 1rem; color: var(--accent-color);">{{ patients_count }}</h1>
+    </div>
+    <div class="glass-card">
+        <h3><i class="fa-solid fa-user-md text-green"></i> Total Doctors</h3>
+        <h1 style="font-size: 3rem; margin-top: 1rem; color: var(--success-color);">{{ doctors_count }}</h1>
+    </div>
+    <div class="glass-card">
+        <h3><i class="fa-solid fa-calendar-check text-purple"></i> Total Appointments</h3>
+        <h1 style="font-size: 3rem; margin-top: 1rem; color: #a855f7;">{{ appointments_count }}</h1>
+    </div>
+</div>
+
+<div class="glass-card">
+    <h2 style="margin-bottom: 1.5rem;">Recent Appointments</h2>
+    {% if recent_appointments %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appt in recent_appointments %}
+                <tr>
+                    <td>{{ appt.appointmentDate.replace('T', ' ') if appt.appointmentDate else 'N/A' }}</td>
+                    <td>{{ appt.patient.firstName }} {{ appt.patient.lastName }}</td>
+                    <td>Dr. {{ appt.doctor.firstName }} {{ appt.doctor.lastName }}</td>
+                    <td>
+                        <span class="badge {% if appt.status == 'Scheduled' %}primary{% elif appt.status == 'Completed' %}success{% else %}warning{% endif %}">
+                            {{ appt.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--card-bg); border: 1px solid var(--border-color);" onclick='openModal("Appointment Details", {
+                            "Date & Time": "{{ appt.appointmentDate.replace("T", " ") if appt.appointmentDate else "N/A" }}",
+                            "Status": "{{ appt.status }}",
+                            "Patient": "{{ appt.patient.firstName }} {{ appt.patient.lastName }}",
+                            "Doctor": "Dr. {{ appt.doctor.firstName }} {{ appt.doctor.lastName }}",
+                            "Notes": {{ appt.notes | tojson if appt.notes else '"N/A"' }}
+                        })'><i class="fa-solid fa-eye"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-secondary);">No recent appointments found.</p>
+    {% endif %}
+</div>
+{% endblock %}

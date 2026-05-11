@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Email Formats | HMS{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Email Formats & SMTP Settings</h1>
+    <p>Configure the automated emails sent to Doctors and Patients when appointments are booked.</p>
+</div>
+
+    <div class="glass-card">
+        <h2 style="margin-bottom: 1.5rem;"><i class="fa-brands fa-google"></i> Gmail Automation Settings</h2>
+        <div class="alert primary" style="font-size: 0.85rem;">
+            Configure your Gmail account here. <strong>Everything you type in the "Appointment Details" field during booking will be automatically mailed to both parties.</strong>
+        </div>
+        <div class="grid-2" style="gap: 1rem; margin-bottom: 1rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Gmail Address</label>
+                <input type="email" name="smtp_email" class="form-control" value="{{ settings.smtp_email }}" placeholder="hospital-admin@gmail.com" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>App Password</label>
+                <input type="password" name="smtp_password" class="form-control" value="{{ settings.smtp_password }}" placeholder="••••••••••••••••" required>
+            </div>
+        </div>
+        <button type="submit" class="btn"><i class="fa-solid fa-save"></i> Save Gmail Settings</button>
+    </div>
+</form>
+
+<div class="glass-card" style="margin-top: 2rem; background: rgba(99, 102, 241, 0.05);">
+    <h2 style="margin-bottom: 1rem;"><i class="fa-solid fa-circle-info"></i> How it Works</h2>
+    <p>We have removed all complexity. There are no templates to manage. Whatever text you enter in the <strong>"Appointment Details"</strong> box when booking an appointment is exactly what will be sent in the email.</p>
+</div>
+
+<!-- Manual From-To Mail Dispatcher -->
+<div class="glass-card" style="margin-top: 2rem; border-top: 3px solid var(--accent-color);">
+    <h2 style="margin-bottom: 1.5rem;"><i class="fa-solid fa-envelope-circle-check"></i> Manual Mail Dispatcher</h2>
+    <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Directly send an email from a specific address to a recipient using your Gmail automation.</p>
+    
+    <form method="POST" action="{{ url_for('manual_send') }}">
+        <div class="grid-2" style="gap: 1.5rem;">
+            <div class="form-group">
+                <label>From Email</label>
+                <input type="email" name="from_email" class="form-control" value="{{ settings.smtp_email }}" placeholder="from@gmail.com" required>
+            </div>
+            <div class="form-group">
+                <label>To Email</label>
+                <input type="email" name="to_email" class="form-control" placeholder="recipient@example.com" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Subject</label>
+            <input type="text" name="subject" class="form-control" placeholder="Email Subject" required>
+        </div>
+        <div class="form-group">
+            <label>Message Content</label>
+            <textarea name="message" class="form-control" rows="5" placeholder="Write your message here..." required></textarea>
+        </div>
+        <button type="submit" class="btn" style="background: var(--accent-color);"><i class="fa-solid fa-paper-plane"></i> Dispatch Email Now</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Hospital Management System{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">
+            <i class="fa-solid fa-hospital"></i> HMS
+        </div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+            <li><a href="{{ url_for('patients') }}" class="{% if request.endpoint == 'patients' %}active{% endif %}"><i class="fa-solid fa-users"></i> Patients</a></li>
+            <li><a href="{{ url_for('doctors') }}" class="{% if request.endpoint == 'doctors' %}active{% endif %}"><i class="fa-solid fa-user-md"></i> Doctors</a></li>
+            <li><a href="{{ url_for('appointments') }}" class="{% if request.endpoint == 'appointments' %}active{% endif %}"><i class="fa-solid fa-calendar-check"></i> Appointments</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Modal -->
+    <div class="modal-overlay" id="globalModal" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 id="modalTitle">Details</h2>
+                <button class="close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal(title, details) {
+            document.getElementById('modalTitle').innerText = title;
+            const body = document.getElementById('modalBody');
+            body.innerHTML = '';
+            for (const [key, value] of Object.entries(details)) {
+                if (value && value !== 'null' && value !== 'N/A') {
+                    let content = String(value).replace(/\n/g, '<br>');
+                    if (key === 'Email') {
+                        content += ` <a href="mailto:${value}" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.8rem; margin-left: 10px; background: #6366f1;"><i class="fa-solid fa-envelope"></i> Send Email</a>`;
+                    }
+                    body.innerHTML += `
+                        <div class="detail-group">
+                            <label>${key}</label>
+                            <p>${content}</p>
+                        </div>
+                    `;
+                }
+            }
+            document.getElementById('globalModal').classList.add('active');
+        }
+
+        function closeModal(event) {
+            if (!event || event.target.id === 'globalModal' || event.currentTarget.classList.contains('close-btn')) {
+                document.getElementById('globalModal').classList.remove('active');
+            }
+        }
+
+        function filterTable(inputId, tableId) {
+            const input = document.getElementById(inputId);
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById(tableId);
+            const tr = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < tr.length; i++) { // Skip header row
+                let tdArray = tr[i].getElementsByTagName("td");
+                let match = false;
+                for (let j = 0; j < tdArray.length; j++) {
+                    if (tdArray[j]) {
+                        if (tdArray[j].innerText.toLowerCase().indexOf(filter) > -1) {
+                            match = true;
+                            break;
+                        }
+                    }
+                }
+                tr[i].style.display = match ? "" : "none";
+            }
+        }
+    </script>
+</body>
+</html>
